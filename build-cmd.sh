@@ -6,11 +6,13 @@ echo basedir is $basedir
 export GOPATH=$basedir
 echo GOPATH is $GOPATH
 
+# add $basedir/bin to PATH 
 already=$( echo $PATH | sed -e 's/:/\n/g' | grep "$basedir/bin")
 if [ -z "$already" ]; then
     export PATH=$PATH:$basedir/bin
 fi
 
+# add $basedir/src/yamlsort to PATH 
 already=$( echo $PATH | sed -e 's/:/\n/g' | grep "$basedir/src/yamlsort")
 if [ -z "$already" ]; then
     export PATH=$PATH:$basedir/src/yamlsort
