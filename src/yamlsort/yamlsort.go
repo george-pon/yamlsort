@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
@@ -28,9 +29,11 @@ type yamlsortCmd struct {
 	blnNormalMarshal bool
 	blnJSONMarshal   bool
 	blnQuoteString   bool
+	priorkeys        []string
 }
 
 func newRootCmd(args []string) *cobra.Command {
+
 	yamlsort := &yamlsortCmd{}
 
 	cmd := &cobra.Command{
@@ -48,6 +51,7 @@ func newRootCmd(args []string) *cobra.Command {
 	f.BoolVar(&yamlsort.blnQuoteString, "quote-string", false, "string value is always quoted in output")
 	f.BoolVar(&yamlsort.blnNormalMarshal, "normal", false, "use marshal (github.com/ghodss/yaml)")
 	f.BoolVar(&yamlsort.blnJSONMarshal, "json", false, "use json marshal (encoding/json)")
+	f.StringArrayVar(&yamlsort.priorkeys, "key", []string{}, "set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)")
 
 	yamlsort.stdin = os.Stdin
 	yamlsort.stdout = os.Stdout
@@ -63,10 +67,21 @@ func main() {
 	}
 }
 
+// in my marshal, sort prior key
+var globalpriorkeys []string
+
 func (c *yamlsortCmd) run() error {
 
 	myReadBytes := []byte{}
 	var err error
+
+	// check prior keys
+	if len(c.priorkeys) == 0 {
+		c.priorkeys = []string{"name"}
+	}
+
+	// set global variable priorkeys
+	globalpriorkeys = c.priorkeys
 
 	// check input-file option
 	if len(c.inputfilename) > 0 {
@@ -102,34 +117,50 @@ func (c *yamlsortCmd) run() error {
 	reader := bytes.NewReader(myReadBytes)
 	scanner := bufio.NewScanner(reader)
 	onefilebuffer := new(bytes.Buffer)
+	linecount := 0
+	firstlinestr := ""
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "---" {
+			linecount = 0
+
+			// flush outfilebuffer
 			if onefilebuffer.Len() > 0 {
 				// marshal one file
-				err = c.procOneFile(outputWriter, onefilebuffer.Bytes())
+				err = c.procOneFile(outputWriter, firstlinestr, onefilebuffer.Bytes())
 				if err != nil {
 					return err
 				}
+				onefilebuffer = new(bytes.Buffer)
+				firstlinestr = ""
 				if flushWriter != nil {
 					err := flushWriter.Flush()
 					if err != nil {
 						return err
 					}
 				}
-				onefilebuffer = new(bytes.Buffer)
 			}
-		} else {
-			fmt.Fprintln(onefilebuffer, line)
+			continue
 		}
+		linecount++
+		if linecount == 1 {
+			if len(line) > 0 {
+				if strings.HasPrefix(line, "#") {
+					firstlinestr = line + "  "
+				}
+			}
+		}
+		fmt.Fprintln(onefilebuffer, line)
 	}
+	// flush outfilebuffer
 	if onefilebuffer.Len() > 0 {
 		// marshal one file
-		err = c.procOneFile(outputWriter, onefilebuffer.Bytes())
+		err = c.procOneFile(outputWriter, firstlinestr, onefilebuffer.Bytes())
 		if err != nil {
 			return err
 		}
 		onefilebuffer = new(bytes.Buffer)
+		firstlinestr = ""
 		if flushWriter != nil {
 			err := flushWriter.Flush()
 			if err != nil {
@@ -141,7 +172,7 @@ func (c *yamlsortCmd) run() error {
 	return nil
 }
 
-func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, inputbytes []byte) error {
+func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, inputbytes []byte) error {
 	// parse yaml data
 	var data interface{}
 	err := yaml.Unmarshal(inputbytes, &data)
@@ -158,7 +189,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, inputbytes []byte) err
 			return err
 		}
 		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintln(outputWriter, "# Marshal output")
+		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# github.com/ghodss/yaml/Marshal output")
 		fmt.Fprintln(outputWriter, string(outputBytes))
 	} else if c.blnJSONMarshal {
 		// write json data with normal marshal
@@ -168,7 +199,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, inputbytes []byte) err
 			return err
 		}
 		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintln(outputWriter, "# Marshal output")
+		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# json.MarshalIndent output")
 		fmt.Fprintln(outputWriter, string(outputBytes))
 
 	} else {
@@ -179,7 +210,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, inputbytes []byte) err
 			return err
 		}
 		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintln(outputWriter, "# myMarshal output")
+		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# myMarshal output")
 		fmt.Fprintln(outputWriter, string(outputBytes2))
 	}
 
@@ -191,6 +222,15 @@ func (c *yamlsortCmd) myMarshal(data interface{}) ([]byte, error) {
 	writer := new(bytes.Buffer)
 	err := c.myMershalRecursive(writer, 0, false, data)
 	return writer.Bytes(), err
+}
+
+func priorIndex(priorkeys []string, s string) int {
+	for i, v := range priorkeys {
+		if s == v {
+			return i
+		}
+	}
+	return 999999
 }
 
 func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentSlide bool, data interface{}) error {
@@ -205,14 +245,12 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 		for k := range m {
 			keylist = append(keylist, k)
 		}
-		// sort map key, but key "name" is first
+		// sort map key, but key priorkeys is first
 		sort.Slice(keylist, func(idx1, idx2 int) bool {
-			if keylist[idx1] == "name" && keylist[idx2] == "name" {
-				return false
-			} else if keylist[idx1] == "name" {
-				return true
-			} else if keylist[idx2] == "name" {
-				return false
+			score1 := priorIndex(globalpriorkeys, keylist[idx1])
+			score2 := priorIndex(globalpriorkeys, keylist[idx2])
+			if score1 != score2 {
+				return score1 < score2
 			}
 			return keylist[idx1] < keylist[idx2]
 		})
