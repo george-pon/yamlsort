@@ -305,6 +305,9 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 	} else if f64, ok := data.(float64); ok {
 		// data is string
 		fmt.Fprintln(writer, f64)
+	} else if b, ok := data.(bool); ok {
+		// data is bool
+		fmt.Fprintln(writer, b)
 	} else {
 		return fmt.Errorf("unknown type:%v  data:%v", reflect.TypeOf(data), data)
 	}
