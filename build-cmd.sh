@@ -24,12 +24,28 @@ else
     mode=$1
 fi
 
+# check dep command
+type dep
+RC=$?
+if [ $RC -ne 0 ]; then
+    # install dep command
+    go get -u github.com/golang/dep/cmd/dep
+fi
 
-if [ x"$mode"x = x"jenkinsbuild"x ]; then
+if [ x"$mode"x = x"depbuild"x ]; then
+    pushd $GOPATH/src/yamlsort
+        dep init
+        go vet
+        go install
+    popd
+fi
+
+
+if [ x"$mode"x = x"glidebuild"x ]; then
     pushd $GOPATH/src/yamlsort
         glide update
         go vet
-        go build
+        go install
     popd
 fi
 
@@ -37,7 +53,7 @@ fi
 if [ x"$mode"x = x"build"x ]; then
     pushd $GOPATH/src/yamlsort
         go vet
-        go build
+        go install
     popd
 fi
 

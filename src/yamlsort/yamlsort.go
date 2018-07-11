@@ -26,6 +26,7 @@ type yamlsortCmd struct {
 	stderr           io.Writer
 	inputfilename    string
 	outputfilename   string
+	blnInputJSON     bool
 	blnNormalMarshal bool
 	blnJSONMarshal   bool
 	blnQuoteString   bool
@@ -48,9 +49,10 @@ func newRootCmd(args []string) *cobra.Command {
 	f := cmd.Flags()
 	f.StringVarP(&yamlsort.inputfilename, "input-file", "i", "", "path to input file name")
 	f.StringVarP(&yamlsort.outputfilename, "output-file", "o", "", "path to output file name")
+	f.BoolVar(&yamlsort.blnInputJSON, "jsoninput", false, "read JSON data")
 	f.BoolVar(&yamlsort.blnQuoteString, "quote-string", false, "string value is always quoted in output")
 	f.BoolVar(&yamlsort.blnNormalMarshal, "normal", false, "use marshal (github.com/ghodss/yaml)")
-	f.BoolVar(&yamlsort.blnJSONMarshal, "json", false, "use json marshal (encoding/json)")
+	f.BoolVar(&yamlsort.blnJSONMarshal, "jsonoutput", false, "use json marshal (encoding/json)")
 	f.StringArrayVar(&yamlsort.priorkeys, "key", []string{}, "set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)")
 
 	yamlsort.stdin = os.Stdin
@@ -113,7 +115,7 @@ func (c *yamlsortCmd) run() error {
 		outputWriter = flushWriter
 	}
 
-	// setup scanner
+	// setup file scanner
 	reader := bytes.NewReader(myReadBytes)
 	scanner := bufio.NewScanner(reader)
 	onefilebuffer := new(bytes.Buffer)
@@ -173,12 +175,22 @@ func (c *yamlsortCmd) run() error {
 }
 
 func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, inputbytes []byte) error {
-	// parse yaml data
 	var data interface{}
-	err := yaml.Unmarshal(inputbytes, &data)
-	if err != nil {
-		fmt.Fprintln(c.stderr, "Unmarshal error:", err)
-		return err
+
+	if c.blnInputJSON {
+		// parse json data
+		err := json.Unmarshal(inputbytes, &data)
+		if err != nil {
+			fmt.Fprintln(c.stderr, "Unmarshal JSON error:", err)
+			return err
+		}
+	} else {
+		// parse yaml data
+		err := yaml.Unmarshal(inputbytes, &data)
+		if err != nil {
+			fmt.Fprintln(c.stderr, "Unmarshal YAML error:", err)
+			return err
+		}
 	}
 
 	if c.blnNormalMarshal {
@@ -203,7 +215,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 		fmt.Fprintln(outputWriter, string(outputBytes))
 
 	} else {
-		// write my marshal
+		// write yamlsort marshal
 		outputBytes2, err := c.myMarshal(data)
 		if err != nil {
 			fmt.Fprintln(c.stderr, "myMarshal error:", err)
