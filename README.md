@@ -14,3 +14,8 @@ yamlsort has 3 marshal pattern.
 2. github.com/ghodss/yaml marshal ( --normal option )
 3. encoding/json marshal ( --json option )
 
+### build
+
+```
+source build-cmd.sh depbuild
+```
