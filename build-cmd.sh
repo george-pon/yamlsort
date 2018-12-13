@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 basedir=$PWD
 echo basedir is $basedir
 
@@ -24,12 +22,6 @@ if [ $# -eq 0 ]; then
     mode=modbuild
 else
     mode=$1
-fi
-
-if [ x"$mode"x = x"clean"x ]; then
-    /bin/rm -rf pkg
-    /bin/rm -rf bin
-    find . | grep -v .git/
 fi
 
 if [ x"$mode"x = x"modbuild"x ]; then
@@ -79,3 +71,4 @@ if [ x"$mode"x = x"build"x ]; then
     popd
 fi
 
+echo "SUCCESS."

@@ -21,16 +21,17 @@ yaml sorter. read yaml text from stdin or file, output map key sorted text to st
 `
 
 type yamlsortCmd struct {
-	stdin            io.Reader
-	stdout           io.Writer
-	stderr           io.Writer
-	inputfilename    string
-	outputfilename   string
-	blnInputJSON     bool
-	blnNormalMarshal bool
-	blnJSONMarshal   bool
-	blnQuoteString   bool
-	priorkeys        []string
+	stdin               io.Reader
+	stdout              io.Writer
+	stderr              io.Writer
+	inputfilename       string
+	outputfilename      string
+	blnInputJSON        bool
+	blnNormalMarshal    bool
+	blnJSONMarshal      bool
+	blnQuoteString      bool
+	blnArrayIndentPlus2 bool
+	priorkeys           []string
 }
 
 func newRootCmd(args []string) *cobra.Command {
@@ -53,6 +54,7 @@ func newRootCmd(args []string) *cobra.Command {
 	f.BoolVar(&yamlsort.blnQuoteString, "quote-string", false, "string value is always quoted in output")
 	f.BoolVar(&yamlsort.blnNormalMarshal, "normal", false, "use marshal (github.com/ghodss/yaml)")
 	f.BoolVar(&yamlsort.blnJSONMarshal, "jsonoutput", false, "use json marshal (encoding/json)")
+	f.BoolVar(&yamlsort.blnArrayIndentPlus2, "array-indent-plus-2", false, "output array indent + 2 in yaml format")
 	f.StringArrayVar(&yamlsort.priorkeys, "key", []string{}, "set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)")
 
 	yamlsort.stdin = os.Stdin
@@ -194,7 +196,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 	}
 
 	if c.blnNormalMarshal {
-		// write yaml data with normal marshal
+		// write yaml data with normal marshal (github.com/ghodss/yaml)
 		outputBytes, err := yaml.Marshal(data)
 		if err != nil {
 			fmt.Fprintln(c.stderr, "Marshal error:", err)
@@ -296,8 +298,12 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 	} else if a, ok := data.([]interface{}); ok {
 		// data is slice
 		for _, v := range a {
-			fmt.Fprintf(writer, "%s- ", c.indentstr(level-2))
-			err := c.myMershalRecursive(writer, level, true, v)
+			levelOffset := 0
+			if c.blnArrayIndentPlus2 {
+				levelOffset = 2
+			}
+			fmt.Fprintf(writer, "%s- ", c.indentstr(level-2+levelOffset))
+			err := c.myMershalRecursive(writer, level+levelOffset, true, v)
 			if err != nil {
 				return err
 			}
@@ -312,10 +318,10 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 			fmt.Fprintln(writer, s)
 		}
 	} else if i, ok := data.(int); ok {
-		// data is string
+		// data is int
 		fmt.Fprintln(writer, i)
 	} else if f64, ok := data.(float64); ok {
-		// data is string
+		// data is float64
 		fmt.Fprintln(writer, f64)
 	} else if b, ok := data.(bool); ok {
 		// data is bool
