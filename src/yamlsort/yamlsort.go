@@ -1,3 +1,8 @@
+//
+// yamlsort - sort by map's key
+//
+//
+//
 package main
 
 import (
@@ -26,6 +31,7 @@ type yamlsortCmd struct {
 	stderr              io.Writer
 	inputfilename       string
 	outputfilename      string
+	overridefilename    string
 	blnInputJSON        bool
 	blnNormalMarshal    bool
 	blnJSONMarshal      bool
@@ -50,6 +56,7 @@ func newRootCmd(args []string) *cobra.Command {
 	f := cmd.Flags()
 	f.StringVarP(&yamlsort.inputfilename, "input-file", "i", "", "path to input file name")
 	f.StringVarP(&yamlsort.outputfilename, "output-file", "o", "", "path to output file name")
+	f.StringVarP(&yamlsort.overridefilename, "override-file", "", "", "path to override input file name")
 	f.BoolVar(&yamlsort.blnInputJSON, "jsoninput", false, "read JSON data")
 	f.BoolVar(&yamlsort.blnQuoteString, "quote-string", false, "string value is always quoted in output")
 	f.BoolVar(&yamlsort.blnNormalMarshal, "normal", false, "use marshal (github.com/ghodss/yaml)")
@@ -176,6 +183,9 @@ func (c *yamlsortCmd) run() error {
 	return nil
 }
 
+//-------------------------------------------------------------------------------------
+//  unmarshal and sort and marshal.
+//
 func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, inputbytes []byte) error {
 	var data interface{}
 
@@ -192,6 +202,17 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 		if err != nil {
 			fmt.Fprintln(c.stderr, "Unmarshal YAML error:", err)
 			return err
+		}
+	}
+
+	// override
+	if len(c.overridefilename) > 0 {
+		dataOverride, err := c.myLoadFromFile(c.overridefilename)
+		if err != nil {
+			return err
+		}
+		if err2 := c.myOverride(data, dataOverride); err2 != nil {
+			return err2
 		}
 	}
 
@@ -231,6 +252,9 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 	return nil
 }
 
+//-----------------------------------------------------------------------------------
+// my marshal (data to string with sorting map key)
+//
 func (c *yamlsortCmd) myMarshal(data interface{}) ([]byte, error) {
 	// create buffer
 	writer := new(bytes.Buffer)
@@ -338,4 +362,108 @@ func (c *yamlsortCmd) indentstr(level int) string {
 		result = result + " "
 	}
 	return result
+}
+
+//-------------------------------------------------------------------------
+// my Override
+//
+func (c *yamlsortCmd) myOverride(data interface{}, dataOverride interface{}) error {
+	return c.myOverrideRecursive(data, dataOverride)
+}
+
+func (c *yamlsortCmd) myOverrideRecursive(data interface{}, dataOverride interface{}) error {
+	if dataOverride == nil {
+		return nil
+	}
+	if data == nil {
+		data = dataOverride
+		return nil
+	}
+
+	// map check
+	mdest, ok1 := data.(map[string]interface{})
+	m, ok2 := dataOverride.(map[string]interface{})
+	if ok1 && ok2 {
+		// dataOverride is map
+		// get key list
+		var keylist []string
+		for k := range m {
+			keylist = append(keylist, k)
+		}
+		// sort map key, but key priorkeys is first
+		sort.Slice(keylist, func(idx1, idx2 int) bool {
+			score1 := priorIndex(globalpriorkeys, keylist[idx1])
+			score2 := priorIndex(globalpriorkeys, keylist[idx2])
+			if score1 != score2 {
+				return score1 < score2
+			}
+			return keylist[idx1] < keylist[idx2]
+		})
+		// recursive call
+		for _, k := range keylist {
+			vdest := mdest[k]
+			v := m[k]
+			// vdest is nil, then copy and continue
+			if vdest == nil {
+				mdest[k] = v
+				continue
+			}
+			// when parent element is slice and print first key value, no need to indent
+			if v == nil {
+				// value is nil. key only.
+				mdest[k] = v
+				continue
+			} else if _, ok := v.(map[string]interface{}); ok {
+				// value is map
+			} else if a, ok := v.([]interface{}); ok {
+				// value is slice
+				if adest, ok2 := vdest.([]interface{}); ok2 {
+					// dest is slice, so append slice
+					adest = append(adest, a...)
+					// override map
+					mdest[k] = adest
+				}
+			} else {
+				// value is normal string/float64/int
+				mdest[k] = v
+				continue
+			}
+			err := c.myOverrideRecursive(vdest, v)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	return nil
+}
+
+//-------------------------------------------------------------------------
+// load yaml data from file
+//
+func (c *yamlsortCmd) myLoadFromFile(filename string) (interface{}, error) {
+	var data interface{}
+	// read from file
+	myReadBytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return data, err
+	}
+
+	if c.blnInputJSON {
+		// parse json data
+		err := json.Unmarshal(myReadBytes, &data)
+		if err != nil {
+			fmt.Fprintln(c.stderr, "Unmarshal JSON error:", err)
+			return data, err
+		}
+	} else {
+		// parse yaml data
+		err := yaml.Unmarshal(myReadBytes, &data)
+		if err != nil {
+			fmt.Fprintln(c.stderr, "Unmarshal YAML error:", err)
+			return data, err
+		}
+	}
+	return data, nil
 }
