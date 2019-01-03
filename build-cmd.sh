@@ -28,16 +28,33 @@ if [ x"$mode"x = x"modbuild"x ]; then
     # for golang 1.11
     export GO111MODULE=on
     pushd $GOPATH/src/yamlsort
-        if [ ! -r $basedir/src/yamlsort/go.mod ]; then
-            go mod init
-        fi
-        go vet
-        go install
-        # GOOS=windows GOARCH=amd64 go install
-        # GOOS=linux GOARCH=amd64 go install
-        # GOOS=linux GOARCH=arm64 go install
-        # GOOS=freebsd GOARCH=amd64 go install
-        # GOOS=freebsd GOARCH=arm64 go install
+        while true
+        do
+            if [ ! -r $basedir/src/yamlsort/go.mod ]; then
+                go mod init
+                RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+            fi
+            
+            go vet
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
+            go install
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
+            mkdir -p ../../bin/windows_amd64
+            cp ../../bin/yamlsort.exe  ../../bin/windows_amd64
+
+            GOOS=windows GOARCH=amd64 go install
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
+            GOOS=linux GOARCH=amd64 go install
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
+            GOOS=freebsd GOARCH=amd64 go install
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
+            break
+        done
     popd
 fi
 
