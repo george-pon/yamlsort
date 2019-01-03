@@ -34,23 +34,20 @@ if [ x"$mode"x = x"modbuild"x ]; then
                 go mod init
                 RC=$? ; if [ $RC -ne 0 ]; then break ; fi
             fi
-            
+
             go vet
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
             go install
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            mkdir -p ../../bin/windows_amd64
-            cp ../../bin/yamlsort.exe  ../../bin/windows_amd64
-
-            GOOS=windows GOARCH=amd64 go install
+            GOOS=windows GOARCH=amd64 go build -o ../../bin/windows_amd64_yamlsort.exe
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            GOOS=linux GOARCH=amd64 go install
+            GOOS=linux GOARCH=amd64 go build -o ../../bin/linux_amd64_yamlsort
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            GOOS=freebsd GOARCH=amd64 go install
+            GOOS=freebsd GOARCH=amd64 go build -o ../../bin/freebsd_amd64_yamlsort
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
             break
