@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERSION=$(git describe)
+
 basedir=$PWD
 echo basedir is $basedir
 
@@ -38,17 +40,23 @@ if [ x"$mode"x = x"modbuild"x ]; then
             go vet
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            go install
+            go install -ldflags "-X main.version=$(git describe)"
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            GOOS=windows GOARCH=amd64 go build -o ../../bin/windows_amd64_yamlsort.exe
+            GOOS=windows GOARCH=amd64 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/windows_amd64_yamlsort.exe
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            GOOS=linux GOARCH=amd64 go build -o ../../bin/linux_amd64_yamlsort
+            GOOS=linux GOARCH=amd64 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/linux_amd64_yamlsort
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
-            GOOS=freebsd GOARCH=amd64 go build -o ../../bin/freebsd_amd64_yamlsort
+            GOOS=freebsd GOARCH=amd64 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/freebsd_amd64_yamlsort
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
+            pushd ../../bin
+            zip -u windows_amd64_yamlsort_${VERSION}.zip windows_amd64_yamlsort.exe
+            zip -u linux_amd64_yamlsort_${VERSION}.zip linux_amd64_yamlsort
+            zip -u freebsd_amd64_yamlsort_${VERSION}.zip freebsd_amd64_yamlsort
+            popd
 
             break
         done
