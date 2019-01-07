@@ -58,6 +58,7 @@ Flags:
   -o, --output-file string     path to output file name
       --override-file string   path to override input file name
       --quote-string           string value is always quoted in output
+      --version                displays version
 ```
 
 ### option
