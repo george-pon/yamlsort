@@ -294,6 +294,68 @@ func priorIndex(priorkeys []string, s string) int {
 	return 999999
 }
 
+func (c *yamlsortCmd) escapeString(value string) string {
+	blnDoQuote := false
+	blnDoDoubleQuote := false
+
+	// if always quote flag, then quote.
+	if c.blnQuoteString {
+		blnDoQuote = true
+	}
+
+	// if string contains " or ' , then quote.
+	if strings.Contains(value, "\"") || strings.Contains(value, "'") {
+		blnDoQuote = true
+	}
+
+	// if string contains \r \n \t , then quote.
+	if strings.Contains(value, "\r") || strings.Contains(value, "\n") || strings.Contains(value, "\t") {
+		blnDoQuote = true
+		blnDoDoubleQuote = true
+	}
+
+	// if string contains { or } , then quote.
+	if strings.Contains(value, "{") || strings.Contains(value, "}") {
+		blnDoQuote = true
+	}
+
+	// if string starts space , then quote.
+	if strings.HasPrefix(value, " ") || strings.HasSuffix(value, " ") {
+		blnDoQuote = true
+	}
+
+	// if string starts tab , then quote.
+	if strings.HasPrefix(value, "\t") || strings.HasSuffix(value, "\t") {
+		blnDoQuote = true
+		blnDoDoubleQuote = true
+	}
+
+	// if string length == 0 ,  then quote
+	if len(value) == 0 {
+		blnDoQuote = true
+	}
+	if !blnDoQuote {
+		return value
+	}
+
+	if blnDoDoubleQuote {
+		// quote "
+		result := value
+		result = strings.Replace(result, "\\", "\\\\", -1)
+		result = strings.Replace(result, "\"", "\\\"", -1)
+		result = strings.Replace(result, "\t", "\\t", -1)
+		result = strings.Replace(result, "\n", "\\n", -1)
+		result = strings.Replace(result, "\r", "\\r", -1)
+		result = "\"" + result + "\""
+		return result
+	} else {
+		// quote '
+		// quote ' .  in quote ' ,  ' is ''
+		result := "'" + strings.Replace(value, "'", "''", -1) + "'"
+		return result
+	}
+}
+
 func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentSlide bool, data interface{}) error {
 	if data == nil {
 		fmt.Fprintln(writer, "null")
@@ -358,15 +420,7 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 		return nil
 	} else if s, ok := data.(string); ok {
 		// data is string
-		if c.blnQuoteString {
-			// string is always quoted
-			fmt.Fprintf(writer, "\"%s\"\n", s)
-		} else if len(s) == 0 {
-			// string is zero length ""
-			fmt.Fprintln(writer, "\"\"")
-		} else {
-			fmt.Fprintln(writer, s)
-		}
+		fmt.Fprintln(writer, c.escapeString(s))
 	} else if i, ok := data.(int); ok {
 		// data is int
 		fmt.Fprintln(writer, i)

@@ -53,9 +53,9 @@ if [ x"$mode"x = x"modbuild"x ]; then
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
             pushd ../../bin
-            zip -u windows_amd64_yamlsort_${VERSION}.zip windows_amd64_yamlsort.exe
-            zip -u linux_amd64_yamlsort_${VERSION}.zip linux_amd64_yamlsort
-            zip -u freebsd_amd64_yamlsort_${VERSION}.zip freebsd_amd64_yamlsort
+            tar czf windows_amd64_yamlsort_${VERSION}.tar.gz windows_amd64_yamlsort.exe
+            tar czf linux_amd64_yamlsort_${VERSION}.tar.gz linux_amd64_yamlsort
+            tar czf freebsd_amd64_yamlsort_${VERSION}.tar.gz freebsd_amd64_yamlsort
             popd
 
             break

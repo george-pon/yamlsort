@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.5
+
+* fix string escape in YAML format
+
 ### version 0.1.4
 
 * fix zero length string value output to "".

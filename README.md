@@ -61,12 +61,39 @@ Flags:
       --version                displays version
 ```
 
-### option
+### output option
 
 yamlsort has 3 marshal pattern.
 1. sorting map key name marshal (default)
 2. use github.com/ghodss/yaml marshal ( --normal option )
 3. use encoding/json marshal ( --jsonoutput option )
+
+### merge(override) option
+
+yamlsort has merge yaml (override) option --override-file .
+
+```
+cat > sample7.yaml << EOF
+apiVersion: apps/v1beta2
+kind: Deployment
+spec:
+  replicas: 1
+EOF
+cat > sample8.yaml << EOF
+spec:
+  replicas: 2
+EOF
+yamlsort -i sample7.yaml --override-file sample8.yaml
+```
+results
+```
+---
+# sample7.yaml  # myMarshal output
+apiVersion: apps/v1beta2
+kind: Deployment
+spec:
+  replicas: 2
+```
 
 ### how to build
 
