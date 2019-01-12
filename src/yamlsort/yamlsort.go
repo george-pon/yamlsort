@@ -34,6 +34,7 @@ type yamlsortCmd struct {
 	stderr              io.Writer
 	inputfilename       string
 	outputfilename      string
+	inputoutputfilename string
 	overridefilename    string
 	blnInputJSON        bool
 	blnNormalMarshal    bool
@@ -61,6 +62,7 @@ func newRootCmd(args []string) *cobra.Command {
 	}
 
 	f := cmd.Flags()
+	f.StringVarP(&yamlsort.inputoutputfilename, "input-output-file", "f", "", "path to input/output file name")
 	f.StringVarP(&yamlsort.inputfilename, "input-file", "i", "", "path to input file name")
 	f.StringVarP(&yamlsort.outputfilename, "output-file", "o", "", "path to output file name")
 	f.StringVarP(&yamlsort.overridefilename, "override-file", "", "", "path to override input file name")
@@ -89,6 +91,9 @@ func main() {
 // in my marshal, sort prior key
 var globalpriorkeys []string
 
+//------------------------------------------------------------------------
+// run main
+//
 func (c *yamlsortCmd) run(args []string) error {
 
 	if args != nil {
@@ -100,6 +105,16 @@ func (c *yamlsortCmd) run(args []string) error {
 	if c.blnVersion {
 		fmt.Fprintln(c.stdout, "yamlsort version "+c.version)
 		return nil
+	}
+
+	// override inputoutputfilename
+	if len(c.inputoutputfilename) > 0 {
+		if len(c.inputfilename) == 0 {
+			c.inputfilename = c.inputoutputfilename
+		}
+		if len(c.outputfilename) == 0 {
+			c.outputfilename = c.inputoutputfilename
+		}
 	}
 
 	myReadBytes := []byte{}
