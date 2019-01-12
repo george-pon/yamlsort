@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.7
+
+* add -f option.
+
 ### version 0.1.6
 
 * fix string escape in YAML format. quoting starts with 0-9 string.
