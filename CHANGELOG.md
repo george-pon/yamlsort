@@ -1,8 +1,12 @@
 # CHANGELOG.md
 
+### version 0.1.8
+
+* comment output is override.
+
 ### version 0.1.7
 
-* add -f option.
+* add -f option. same as -i and -o.
 
 ### version 0.1.6
 
