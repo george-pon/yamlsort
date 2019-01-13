@@ -1,0 +1,4 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+spec:
+  replicas: 1

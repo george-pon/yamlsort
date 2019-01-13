@@ -1,0 +1,9 @@
+---
+# sample.yaml  # powered by myMarshal output
+spec:
+  ports:
+  - name: http
+    a: a-value
+    b: b-value
+    c: c-value
+

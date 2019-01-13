@@ -1,0 +1,35 @@
+---
+# Source: kjwikigdocker/templates/service.yaml  # powered by myMarshal output
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-kjwikigdocker
+  labels:
+    app: RELEASE-NAME-kjwikigdocker
+    chart: kjwikigdocker-0.1.0
+    heritage: Tiller
+    release: RELEASE-NAME
+spec:
+  ports:
+  - name: kjwikigdocker
+    aaa: hogehoge
+    port: 8080
+    protocol: TCP
+    targetPort: kjwikigdocker
+  - name: kjwikigdockerhttp
+    port: 80
+    protocol: TCP
+    targetPort: kjwikigdockerhttp
+    title: kjwikigtitle
+  selector:
+    app: RELEASE-NAME-kjwikigdocker
+    release: RELEASE-NAME
+  type: NodePort
+test:
+  array:
+  - port: 5555
+    protocol: UDP
+  - port: 5556
+    protocol: TCP
+  keyonly: null
+

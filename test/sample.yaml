@@ -1,0 +1,6 @@
+spec:
+  ports:
+  - b: b-value
+    c: c-value
+    name: http
+    a: a-value

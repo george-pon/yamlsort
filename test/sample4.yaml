@@ -1,0 +1,54 @@
+# Source: kjwikigdocker/templates/deployment.yaml
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-kjwikigdocker
+  labels:
+    app: RELEASE-NAME-kjwikigdocker
+    chart: kjwikigdocker-0.1.0
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-kjwikigdocker
+      release: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-kjwikigdocker
+        release: RELEASE-NAME
+    spec:
+      containers:
+        - name: kjwikigdocker-container
+          image: "georgesan/kjwikigdocker:build352"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: abc
+              value: def
+            - name: ghi
+              value: jkl
+          ports:
+            - name: kjwikigdocker
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: kjwikigdocker
+          readinessProbe:
+            httpGet:
+              path: /
+              port: kjwikigdocker
+          volumeMounts:
+          - name: data
+            mountPath: /var/lib/kjwikigdocker
+            subPath: 
+          resources:
+            {}
+            
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: RELEASE-NAME-kjwikigdocker

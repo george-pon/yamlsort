@@ -1,0 +1,7 @@
+---
+# sample7.yaml  # powered by myMarshal output
+apiVersion: apps/v1beta2
+kind: Deployment
+spec:
+  replicas: 2
+

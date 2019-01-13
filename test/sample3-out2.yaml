@@ -1,0 +1,17 @@
+---
+# sample3.yaml  # powered by myMarshal output
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kjwikigdocker
+  labels:
+    app: kjwikigdocker
+spec:
+  rules:
+  - host: kjwikigdocker.minikube.test
+    http:
+      paths:
+      - backend:
+          serviceName: kjwikigdocker
+          servicePort: 8080
+

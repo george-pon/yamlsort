@@ -1,0 +1,15 @@
+---
+# sample6.yaml  # powered by myMarshal output
+key1: null
+key10: ''''
+key11: '80'
+key2: ''
+key3: null
+key4: '  abc  '
+key5: '{"key" : "value"}'
+key6:
+  key: value
+key7: '{key:value}'
+key8: "\r\n"
+key9: "\r\n \t \" "
+

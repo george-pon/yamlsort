@@ -254,6 +254,11 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 		}
 	}
 
+	// if firstline contains '# powered by ' , remove it.
+	idx := strings.Index(firstlinestr, "# powered by ")
+	if idx >= 0 {
+		firstlinestr = string([]rune(firstlinestr)[:idx])
+	}
 	if c.blnNormalMarshal {
 		// write yaml data with normal marshal (github.com/ghodss/yaml)
 		outputBytes, err := yaml.Marshal(data)
@@ -262,7 +267,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 			return err
 		}
 		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# github.com/ghodss/yaml/Marshal output")
+		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# powered by github.com/ghodss/yaml/Marshal")
 		fmt.Fprintln(outputWriter, string(outputBytes))
 	} else if c.blnJSONMarshal {
 		// write json data with normal marshal
@@ -272,7 +277,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 			return err
 		}
 		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# json.MarshalIndent output")
+		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# powered by json.MarshalIndent output")
 		fmt.Fprintln(outputWriter, string(outputBytes))
 
 	} else {
@@ -283,7 +288,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 			return err
 		}
 		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# myMarshal output")
+		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# powered by myMarshal output")
 		fmt.Fprintln(outputWriter, string(outputBytes2))
 	}
 

@@ -1,0 +1,33 @@
+# Source: kjwikigdocker/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-kjwikigdocker
+  labels:
+    chart: kjwikigdocker-0.1.0
+    app: RELEASE-NAME-kjwikigdocker
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    aaa: hogehoge
+    name: kjwikigdocker
+    targetPort: kjwikigdocker
+    protocol: TCP
+  - port: 80
+    title: kjwikigtitle
+    name: kjwikigdockerhttp
+    targetPort: kjwikigdockerhttp
+    protocol: TCP
+  selector:
+    app: RELEASE-NAME-kjwikigdocker
+    release: RELEASE-NAME
+test:
+  keyonly:
+  array:
+    - port: 5555
+      protocol: UDP
+    - port: 5556
+      protocol: TCP

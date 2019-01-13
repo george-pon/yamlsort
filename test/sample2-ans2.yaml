@@ -1,0 +1,98 @@
+---
+# Source: kjwikigdocker/templates/pvc.yaml  # powered by myMarshal output
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: RELEASE-NAME-kjwikigdocker
+  labels:
+    app: RELEASE-NAME-kjwikigdocker
+    chart: kjwikigdocker-0.1.0
+    heritage: Tiller
+    release: RELEASE-NAME
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: '3Gi'
+
+---
+# Source: kjwikigdocker/templates/service.yaml  # powered by myMarshal output
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-kjwikigdocker
+  labels:
+    app: RELEASE-NAME-kjwikigdocker
+    chart: kjwikigdocker-0.1.0
+    heritage: Tiller
+    release: RELEASE-NAME
+spec:
+  ports:
+  - name: kjwikigdocker
+    port: 8080
+    protocol: TCP
+    targetPort: kjwikigdocker
+  selector:
+    app: RELEASE-NAME-kjwikigdocker
+    release: RELEASE-NAME
+  type: NodePort
+
+---
+# Source: kjwikigdocker/templates/deployment.yaml  # powered by myMarshal output
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-kjwikigdocker
+  labels:
+    app: RELEASE-NAME-kjwikigdocker
+    chart: kjwikigdocker-0.1.0
+    heritage: Tiller
+    release: RELEASE-NAME
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-kjwikigdocker
+      release: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-kjwikigdocker
+        release: RELEASE-NAME
+    spec:
+      containers:
+      - name: kjwikigdocker-container
+        env:
+        - name: abc
+          value: def
+        - name: ghi
+          value: jkl
+        image: georgesan/kjwikigdocker:build352
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: kjwikigdocker
+        ports:
+        - name: kjwikigdocker
+          containerPort: 8080
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: kjwikigdocker
+        resources: null
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/kjwikigdocker
+          subPath: null
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: RELEASE-NAME-kjwikigdocker
+
+---
+# Source: kjwikigdocker/templates/ingress.yaml  # powered by myMarshal output
+null
+
