@@ -6,7 +6,7 @@
 source ./test-common.sh
 
 function f-log() {
-    echo "■ $@"
+    echo "==== $@"
 }
 
 function f-cmd-run() {
@@ -84,28 +84,28 @@ function f-test-convert() {
 TEST_SUCCESS_COUNT=0
 TEST_FAILURE_COUNT=0
 
-f-log "バージョン表示"
+f-log "version"
 f-test-success yamlsort version
 
-f-log "変換"
+f-log "convert "
 f-test-convert  sample.yaml
 
-f-log "変換1"
+f-log "convert 1"
 f-test-convert  sample1.yaml
 
-f-log "変換2"
+f-log "convert 2"
 f-test-convert  sample2.yaml
 
-f-log "変換3"
+f-log "convert 3"
 f-test-convert  sample3.yaml
 
-f-log "変換4"
+f-log "convert 4"
 f-test-convert  sample4.yaml
 
-f-log "変換6"
+f-log "convert 6"
 f-test-convert  sample6.yaml
 
-f-log "変換7"
+f-log "convert 7"
 f-test-convert  sample7.yaml
 
 f-log "TEST_SUCCESS_COUNT  $TEST_SUCCESS_COUNT  "

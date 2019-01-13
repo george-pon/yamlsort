@@ -3,7 +3,7 @@
 # release preview
 #
 
-vi  README.md  CHANGELOG.md
+# vi  README.md  CHANGELOG.md
 
 # build
 source build-cmd.sh

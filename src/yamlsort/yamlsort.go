@@ -28,6 +28,23 @@ var yamlsortUsage = `
 yaml sorter. read yaml text from stdin or file, output map key sorted text to stdout or file.
 `
 
+//---------------------------------------------------------------------
+//  stringMacro class
+// helm chart macro value
+//
+type stringMacro struct {
+	value string
+}
+
+func (c *stringMacro) setString(arg string) {
+}
+func (c *stringMacro) getString() string {
+	return c.value
+}
+
+//---------------------------------------------------------------------
+//  yamlsortCmd class
+//
 type yamlsortCmd struct {
 	stdin               io.Reader
 	stdout              io.Writer
@@ -446,6 +463,12 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 			}
 		}
 		return nil
+	} else if s, ok := data.(stringMacro); ok {
+		// data is stringMacro
+		fmt.Fprintln(writer, s.getString())
+	} else if s, ok := data.(string); ok {
+		// data is string
+		fmt.Fprintln(writer, c.escapeString(s))
 	} else if s, ok := data.(string); ok {
 		// data is string
 		fmt.Fprintln(writer, c.escapeString(s))
