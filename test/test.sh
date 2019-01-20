@@ -113,5 +113,8 @@ f-test-convert  sample6.yaml
 f-log "convert 7"
 f-test-convert  sample7.yaml
 
+f-log "convert 8"
+f-test-convert  sample8.yaml
+
 f-log "TEST_SUCCESS_COUNT  $TEST_SUCCESS_COUNT  "
 f-log "TEST_FAILURE_COUNT  $TEST_FAILURE_COUNT  "

@@ -591,7 +591,11 @@ func (c *yamlsortCmd) myOverrideRecursive(data interface{}, dataOverride interfa
 							namedest := mdest["name"]
 							if _, ok5 := namedest.(string); ok5 {
 								if name == namedest {
-									adest[idest] = m
+									result, err := c.myOverrideRecursive(mdest, m)
+									if err != nil {
+										return data, err
+									}
+									adest[idest] = result
 									blnOverride = true
 								}
 							}

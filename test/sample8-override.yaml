@@ -1,8 +1,7 @@
 # Source: kjwikigdocker/templates/deployment-modifier.yaml
 spec:
-  replicas: 2
   template:
     spec:
       containers:
-        - name: init-container
-          image: "init-container:buildtarget"
+        - name: kjwikigdocker-container
+          image: "georgesan/kjwikigdocker:build357"

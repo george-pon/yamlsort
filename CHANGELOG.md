@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.10
+
+* improve support map["name"] in slice override.
+
 ### version 0.1.9
 
 * support map["name"] in slice override.
