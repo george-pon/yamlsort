@@ -266,9 +266,11 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 		if err != nil {
 			return err
 		}
-		if err2 := c.myOverride(data, dataOverride); err2 != nil {
+		result, err2 := c.myOverride(data, dataOverride)
+		if err2 != nil {
 			return err2
 		}
+		data = result
 	}
 
 	// if firstline contains '# powered by ' , remove it.
@@ -498,76 +500,180 @@ func (c *yamlsortCmd) indentstr(level int) string {
 //-------------------------------------------------------------------------
 // my Override
 //
-func (c *yamlsortCmd) myOverride(data interface{}, dataOverride interface{}) error {
-	return c.myOverrideRecursive(data, dataOverride)
+
+func (c *yamlsortCmd) myOverride(data interface{}, dataOverride interface{}) (interface{}, error) {
+	result, err := c.myOverrideRecursive(data, dataOverride)
+	return result, err
 }
 
-func (c *yamlsortCmd) myOverrideRecursive(data interface{}, dataOverride interface{}) error {
+func (c *yamlsortCmd) myOverrideRecursive(data interface{}, dataOverride interface{}) (interface{}, error) {
 	if dataOverride == nil {
-		return nil
+		return data, nil
 	}
 	if data == nil {
 		data = dataOverride
-		return nil
+		return data, nil
 	}
 
-	// map check
-	mdest, ok1 := data.(map[string]interface{})
-	m, ok2 := dataOverride.(map[string]interface{})
-	if ok1 && ok2 {
-		// dataOverride is map
-		// get key list
-		var keylist []string
-		for k := range m {
-			keylist = append(keylist, k)
-		}
-		// sort map key, but key priorkeys is first
-		sort.Slice(keylist, func(idx1, idx2 int) bool {
-			score1 := priorIndex(globalpriorkeys, keylist[idx1])
-			score2 := priorIndex(globalpriorkeys, keylist[idx2])
-			if score1 != score2 {
-				return score1 < score2
+	{
+		// map check
+		mdest, ok1 := data.(map[string]interface{})
+		m, ok2 := dataOverride.(map[string]interface{})
+		if ok1 && ok2 {
+			// dataOverride is map
+			// get key list
+			var keylist []string
+			for k := range m {
+				keylist = append(keylist, k)
 			}
-			return keylist[idx1] < keylist[idx2]
-		})
-		// recursive call
-		for _, k := range keylist {
-			vdest := mdest[k]
-			v := m[k]
-			// vdest is nil, then copy and continue
-			if vdest == nil {
-				mdest[k] = v
-				continue
-			}
-			// when parent element is slice and print first key value, no need to indent
-			if v == nil {
-				// value is nil. key only.
-				mdest[k] = v
-				continue
-			} else if _, ok := v.(map[string]interface{}); ok {
-				// value is map
-			} else if a, ok := v.([]interface{}); ok {
-				// value is slice
-				if adest, ok2 := vdest.([]interface{}); ok2 {
-					// dest is slice, so append slice
-					adest = append(adest, a...)
-					// override map
-					mdest[k] = adest
+			// sort map key, but key priorkeys is first
+			sort.Slice(keylist, func(idx1, idx2 int) bool {
+				score1 := priorIndex(globalpriorkeys, keylist[idx1])
+				score2 := priorIndex(globalpriorkeys, keylist[idx2])
+				if score1 != score2 {
+					return score1 < score2
 				}
-			} else {
-				// value is normal string/float64/int
-				mdest[k] = v
-				continue
+				return keylist[idx1] < keylist[idx2]
+			})
+			// recursive call
+			for _, k := range keylist {
+				vdest := mdest[k]
+				v := m[k]
+				// vdest is nil, then copy and continue
+				if vdest == nil {
+					mdest[k] = v
+					continue
+				}
+				// when parent element is slice and print first key value, no need to indent
+				if v == nil {
+					// value is nil. key only.
+					mdest[k] = v
+					continue
+				} else if _, ok := v.(map[string]interface{}); ok {
+					// value is map
+				} else if _, ok := v.([]interface{}); ok {
+					// value is slice
+					//if adest, ok2 := vdest.([]interface{}); ok2 {
+					//	// dest is slice, so append slice
+					//	adest = append(adest, a...)
+					//	// override map
+					//	mdest[k] = adest
+					//}
+				} else {
+					// value is normal string/float64/int
+					mdest[k] = v
+					continue
+				}
+				result, err := c.myOverrideRecursive(vdest, v)
+				if err != nil {
+					return data, err
+				}
+				mdest[k] = result
 			}
-			err := c.myOverrideRecursive(vdest, v)
-			if err != nil {
-				return err
-			}
+			return data, nil
 		}
-		return nil
+	}
+	{
+		// slice check ( slice - map type )
+		adest, ok1 := data.([]interface{})
+		a, ok2 := dataOverride.([]interface{})
+		if ok1 && ok2 {
+			blnOverride := false
+
+			// check slice - map["name"] type
+			for _, elem := range a {
+				if m, ok3 := elem.(map[string]interface{}); ok3 {
+					// slice - map
+					name := m["name"]
+					for idest, destelem := range adest {
+						if mdest, ok4 := destelem.(map[string]interface{}); ok4 {
+							// slice - map
+							namedest := mdest["name"]
+							if _, ok5 := namedest.(string); ok5 {
+								if name == namedest {
+									adest[idest] = m
+									blnOverride = true
+								}
+							}
+						}
+					}
+					if blnOverride == false {
+						// append
+						adest = append(adest, m)
+						blnOverride = true
+					}
+				} else if s, ok4 := elem.(string); ok4 {
+					// check []string
+					adest = append(adest, s)
+					blnOverride = true
+				} else if i, ok4 := elem.(int); ok4 {
+					// check []string
+					adest = append(adest, i)
+					blnOverride = true
+				} else if f, ok4 := elem.(float64); ok4 {
+					// check []string
+					adest = append(adest, f)
+					blnOverride = true
+				} else if b, ok4 := elem.(bool); ok4 {
+					// check []string
+					adest = append(adest, b)
+					blnOverride = true
+				}
+			}
+
+			if blnOverride == false {
+				fmt.Printf("unknown slice type:%v  data:%v", reflect.TypeOf(data), data)
+			}
+			return adest, nil
+		}
+	}
+	{
+		// slice check ( slice - string/int/float64/bool type )
+		adest, ok1 := data.([]string)
+		a, ok2 := dataOverride.([]string)
+		if ok1 && ok2 {
+			for _, k := range a {
+				adest = append(adest, k)
+				fmt.Println("append []string ", k)
+			}
+			return adest, nil
+		}
+	}
+	{
+		// slice check ( slice - string/int/float64/bool type )
+		adest, ok1 := data.([]int)
+		a, ok2 := dataOverride.([]int)
+		if ok1 && ok2 {
+			for _, k := range a {
+				adest = append(adest, k)
+			}
+			return adest, nil
+		}
+	}
+	{
+		// slice check ( slice - string/int/float64/bool type )
+		adest, ok1 := data.([]float64)
+		a, ok2 := dataOverride.([]float64)
+		if ok1 && ok2 {
+			for _, k := range a {
+				adest = append(adest, k)
+			}
+			return adest, nil
+		}
+	}
+	{
+		// slice check ( slice - string/int/float64/bool type )
+		adest, ok1 := data.([]bool)
+		a, ok2 := dataOverride.([]bool)
+		if ok1 && ok2 {
+			for _, k := range a {
+				adest = append(adest, k)
+			}
+			return adest, nil
+		}
 	}
 
-	return nil
+	return data, fmt.Errorf("unknown type:%v  data:%v", reflect.TypeOf(data), data)
 }
 
 //-------------------------------------------------------------------------

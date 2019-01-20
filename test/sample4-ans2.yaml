@@ -49,8 +49,6 @@ spec:
           subPath: null
       - name: init-container
         image: init-container:buildtarget
-      - name: init-container
-        image: init-container:buildtarget
       volumes:
       - name: data
         persistentVolumeClaim:

@@ -15,6 +15,7 @@ function f-cmd-run() {
 }
 
 function f-test-success() {
+    echo "$@"
     if "$@" ; then
         echo "SUCCESS"
         TEST_SUCCESS_COUNT=$(( $TEST_SUCCESS_COUNT + 1 ))
@@ -27,6 +28,7 @@ function f-test-success() {
 }
 
 function f-test-failure() {
+    echo "$@"
     if "$@" ; then
         echo "FAILURE"
         TEST_FAILURE_COUNT=$(( $TEST_FAILURE_COUNT + 1 ))
@@ -101,6 +103,9 @@ f-test-convert  sample3.yaml
 
 f-log "convert 4"
 f-test-convert  sample4.yaml
+
+f-log "convert 5"
+f-test-convert  sample5.yaml
 
 f-log "convert 6"
 f-test-convert  sample6.yaml
