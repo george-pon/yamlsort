@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.11
+
+* fix string value true,false,yes,no,on,off with string quote.
+
 ### version 0.1.10
 
 * improve support map["name"] in slice override.

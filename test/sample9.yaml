@@ -1,0 +1,7 @@
+env:
+  - name: REPLICA
+    value: "true"
+  - name: ALWAYS_RESTART
+    value: "yes"
+  - name: APP_VALUE
+    value: "on"
