@@ -15,7 +15,9 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
@@ -324,6 +326,7 @@ func (c *yamlsortCmd) myMarshal(data interface{}) ([]byte, error) {
 	return writer.Bytes(), err
 }
 
+// return socre of priority key name  , like "name"
 func priorIndex(priorkeys []string, s string) int {
 	for i, v := range priorkeys {
 		if s == v {
@@ -331,6 +334,64 @@ func priorIndex(priorkeys []string, s string) int {
 		}
 	}
 	return 999999
+}
+
+// convert string to int slice, number is convert to one int.
+func convertStringToUint64Slice(s string) ([]uint64, error) {
+	result := []uint64{}
+	digitBuf := []rune{}
+
+	for _, r := range s {
+		if unicode.IsDigit(r) {
+			digitBuf = append(digitBuf, r)
+		} else {
+			if len(digitBuf) > 0 {
+				i, err := strconv.ParseInt(string(digitBuf), 10, 64)
+				if err != nil {
+					return result, err
+				}
+				result = append(result, uint64(i))
+				digitBuf = []rune{}
+			}
+			// string character (rune) is may be 32bit value (unicode 16)
+			result = append(result, uint64(r)+0x1000000000000000)
+		}
+	}
+	if len(digitBuf) > 0 {
+		i, err := strconv.ParseInt(string(digitBuf), 10, 64)
+		if err != nil {
+			return result, err
+		}
+		result = append(result, uint64(i))
+		digitBuf = []rune{}
+	}
+	return result, nil
+}
+
+// compair string1 string2 , consider prior key name , and string-number-string key
+func compairString(s1 string, s2 string) bool {
+	// priority key name check
+	score1 := priorIndex(globalpriorkeys, s1)
+	score2 := priorIndex(globalpriorkeys, s2)
+	if score1 != score2 {
+		return score1 < score2
+	}
+
+	uint64slice1, err1 := convertStringToUint64Slice(s1)
+	uint64slice2, err2 := convertStringToUint64Slice(s2)
+	if err1 != nil || err2 != nil {
+		return s1 < s2
+	}
+
+	// string compair with string-number-string
+	len1 := len(uint64slice1)
+	len2 := len(uint64slice2)
+	for i := 0; i < len1 && i < len2; i++ {
+		if uint64slice1[i] != uint64slice2[i] {
+			return uint64slice1[i] < uint64slice2[i]
+		}
+	}
+	return len1 < len2
 }
 
 func (c *yamlsortCmd) escapeString(value string) string {
@@ -350,8 +411,8 @@ func (c *yamlsortCmd) escapeString(value string) string {
 		}
 	}
 
-	// if string starts with 0-9 , then quote.
-	numberArray := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+	// if string starts with 0-9 , . , then quote.
+	numberArray := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "!", "@", "#", "%", "&", "*", "|", "`", "[", "]", "{", "}"}
 	for _, s := range numberArray {
 		if strings.HasPrefix(value, s) {
 			blnDoQuote = true
@@ -425,12 +486,7 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 		}
 		// sort map key, but key priorkeys is first
 		sort.Slice(keylist, func(idx1, idx2 int) bool {
-			score1 := priorIndex(globalpriorkeys, keylist[idx1])
-			score2 := priorIndex(globalpriorkeys, keylist[idx2])
-			if score1 != score2 {
-				return score1 < score2
-			}
-			return keylist[idx1] < keylist[idx2]
+			return compairString(keylist[idx1], keylist[idx2])
 		})
 		// recursive call
 		for i, k := range keylist {
@@ -536,12 +592,7 @@ func (c *yamlsortCmd) myOverrideRecursive(data interface{}, dataOverride interfa
 			}
 			// sort map key, but key priorkeys is first
 			sort.Slice(keylist, func(idx1, idx2 int) bool {
-				score1 := priorIndex(globalpriorkeys, keylist[idx1])
-				score2 := priorIndex(globalpriorkeys, keylist[idx2])
-				if score1 != score2 {
-					return score1 < score2
-				}
-				return keylist[idx1] < keylist[idx2]
+				return compairString(keylist[idx1], keylist[idx2])
 			})
 			// recursive call
 			for _, k := range keylist {

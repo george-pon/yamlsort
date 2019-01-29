@@ -1,5 +1,10 @@
 # CHANGELOG.md
 
+### version 0.1.12
+
+* fix when string value start with , output quoted.
+* fix key name sort order. key9 < key 10
+
 ### version 0.1.11
 
 * fix string value true,false,yes,no,on,off with string quote.
