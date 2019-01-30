@@ -82,7 +82,8 @@ spec:
           httpGet:
             path: /
             port: kjwikigdocker
-        resources: null
+        resources:
+          {}
         volumeMounts:
         - name: data
           mountPath: /var/lib/kjwikigdocker

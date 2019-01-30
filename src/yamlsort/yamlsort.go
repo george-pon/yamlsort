@@ -479,15 +479,25 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 	}
 	if m, ok := data.(map[string]interface{}); ok {
 		// data is map
+
+		// if map has no key , then output {}
+		if len(m) == 0 {
+			indentstr := c.indentstr(level)
+			fmt.Fprintf(writer, "%s%s\n", indentstr, "{}")
+			return nil
+		}
+
 		// get key list
 		var keylist []string
 		for k := range m {
 			keylist = append(keylist, k)
 		}
+
 		// sort map key, but key priorkeys is first
 		sort.Slice(keylist, func(idx1, idx2 int) bool {
 			return compairString(keylist[idx1], keylist[idx2])
 		})
+
 		// recursive call
 		for i, k := range keylist {
 			v := m[k]

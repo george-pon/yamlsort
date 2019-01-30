@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.13
+
+* fix when map has no key, output {}
+
 ### version 0.1.12
 
 * fix when string value start with , output quoted.
