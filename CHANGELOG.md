@@ -1,5 +1,11 @@
 # CHANGELOG.md
 
+### version 0.1.14
+
+* add --skip-key option. skip output (remove) key from myMarshal output.
+    example : --skip-key spec.template.spec.containers[name=kjwikigdocker-container].env[name=abc]
+    whense spec.template.spec.containers has array of map , which has key 'name' and value  'kjwikigdocker-container'.
+
 ### version 0.1.13
 
 * fix when map has no key, output {}

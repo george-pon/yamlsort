@@ -42,23 +42,26 @@ spec:
 ```
 $ yamlsort --help
 
+
 yaml sorter. read yaml text from stdin or file, output map key sorted text to stdout or file.
 
 Usage:
   yamlsort [flags]
 
 Flags:
-      --array-indent-plus-2    output array indent + 2 in yaml format
-  -h, --help                   help for yamlsort
-  -i, --input-file string      path to input file name
-      --jsoninput              read JSON data
-      --jsonoutput             use json marshal (encoding/json)
-      --key stringArray        set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)
-      --normal                 use marshal (github.com/ghodss/yaml)
-  -o, --output-file string     path to output file name
-      --override-file string   path to override input file name
-      --quote-string           string value is always quoted in output
-      --version                displays version
+      --array-indent-plus-2        output array indent + 2 in yaml format
+  -h, --help                       help for yamlsort
+  -i, --input-file string          path to input file name
+  -f, --input-output-file string   path to input/output file name
+      --jsoninput                  read JSON data
+      --jsonoutput                 use json marshal (encoding/json)
+      --key stringArray            set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)
+      --normal                     use marshal (github.com/ghodss/yaml)
+  -o, --output-file string         path to output file name
+      --override-file string       path to override input file name
+      --quote-string               string value is always quoted in output
+      --skip-key stringArray       skip key name in marshal output. (can specify multiple values with --skip-key name --skip-key title)
+      --version                    displays version
 ```
 
 ### output option

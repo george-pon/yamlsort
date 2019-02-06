@@ -55,6 +55,7 @@ type yamlsortCmd struct {
 	outputfilename      string
 	inputoutputfilename string
 	overridefilename    string
+	skipkeys            []string
 	blnInputJSON        bool
 	blnNormalMarshal    bool
 	blnJSONMarshal      bool
@@ -92,6 +93,7 @@ func newRootCmd(args []string) *cobra.Command {
 	f.BoolVar(&yamlsort.blnArrayIndentPlus2, "array-indent-plus-2", false, "output array indent + 2 in yaml format")
 	f.BoolVar(&yamlsort.blnVersion, "version", false, "displays version")
 	f.StringArrayVar(&yamlsort.priorkeys, "key", []string{}, "set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)")
+	f.StringArrayVar(&yamlsort.skipkeys, "skip-key", []string{}, "skip key name in marshal output. (can specify multiple values with --skip-key name --skip-key title)")
 
 	yamlsort.stdin = os.Stdin
 	yamlsort.stdout = os.Stdout
@@ -302,7 +304,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 		fmt.Fprintln(outputWriter, string(outputBytes))
 
 	} else {
-		// write yamlsort marshal
+		// write yamlsort my marshal
 		outputBytes2, err := c.myMarshal(data)
 		if err != nil {
 			fmt.Fprintln(c.stderr, "myMarshal error:", err)
@@ -322,7 +324,7 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 func (c *yamlsortCmd) myMarshal(data interface{}) ([]byte, error) {
 	// create buffer
 	writer := new(bytes.Buffer)
-	err := c.myMershalRecursive(writer, 0, false, data)
+	err := c.myMershalRecursive(writer, 0, "", false, data)
 	return writer.Bytes(), err
 }
 
@@ -472,7 +474,42 @@ func (c *yamlsortCmd) escapeString(value string) string {
 	}
 }
 
-func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentSlide bool, data interface{}) error {
+func (c *yamlsortCmd) calcPathMap(path string, key string) string {
+	if len(path) == 0 {
+		return key
+	} else {
+		return path + "." + key
+	}
+}
+
+func (c *yamlsortCmd) calcPathSlice(path string, index int) string {
+	if len(path) == 0 {
+		return "[" + strconv.Itoa(index) + "]"
+	} else {
+		return path + "[" + strconv.Itoa(index) + "]"
+	}
+}
+
+func (c *yamlsortCmd) calcPathSliceMap(path string, key string, value string) string {
+	if len(path) == 0 {
+		return "[" + key + "=" + value + "]"
+	} else {
+		return path + "[" + key + "=" + value + "]"
+	}
+}
+
+func (c *yamlsortCmd) checkSkipKey(path string) bool {
+	for _, s := range c.skipkeys {
+		if len(s) > 0 {
+			if s == path {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, path string, blnParentSlide bool, data interface{}) error {
 	if data == nil {
 		fmt.Fprintln(writer, "null")
 		return nil
@@ -506,6 +543,11 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 			if blnParentSlide && i == 0 {
 				indentstr = ""
 			}
+			childpath := c.calcPathMap(path, k)
+			// check skip key
+			if c.checkSkipKey(childpath) == true {
+				continue
+			}
 			if v == nil {
 				// child is nil. print key only.
 				fmt.Fprintf(writer, "%s%s: ", indentstr, k)
@@ -519,7 +561,7 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 				// child is normal string
 				fmt.Fprintf(writer, "%s%s: ", indentstr, k)
 			}
-			err := c.myMershalRecursive(writer, level+2, false, v)
+			err := c.myMershalRecursive(writer, level+2, childpath, false, v)
 			if err != nil {
 				return err
 			}
@@ -527,13 +569,26 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 		return nil
 	} else if a, ok := data.([]interface{}); ok {
 		// data is slice
-		for _, v := range a {
+		for i, v := range a {
 			levelOffset := 0
 			if c.blnArrayIndentPlus2 {
 				levelOffset = 2
 			}
+			childpath := c.calcPathSlice(path, i)
+			if tmpmap, ok2 := v.(map[string]interface{}); ok2 {
+				if tmpname, ok3 := tmpmap["name"]; ok3 {
+					if tmpnamestr, ok4 := tmpname.(string); ok4 {
+						// sliceの中は name要素を持つmapの場合、特別なpath [name=value]を生成
+						childpath = c.calcPathSliceMap(path, "name", tmpnamestr)
+					}
+				}
+			}
+			// check skip key
+			if c.checkSkipKey(childpath) == true {
+				continue
+			}
 			fmt.Fprintf(writer, "%s- ", c.indentstr(level-2+levelOffset))
-			err := c.myMershalRecursive(writer, level+levelOffset, true, v)
+			err := c.myMershalRecursive(writer, level+levelOffset, childpath, true, v)
 			if err != nil {
 				return err
 			}
@@ -542,9 +597,6 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, blnParentS
 	} else if s, ok := data.(stringMacro); ok {
 		// data is stringMacro
 		fmt.Fprintln(writer, s.getString())
-	} else if s, ok := data.(string); ok {
-		// data is string
-		fmt.Fprintln(writer, c.escapeString(s))
 	} else if s, ok := data.(string); ok {
 		// data is string
 		fmt.Fprintln(writer, c.escapeString(s))

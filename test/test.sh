@@ -42,6 +42,8 @@ function f-test-failure() {
 
 function f-test-convert() {
     local input_file=$1
+    shift
+    local other_opt="$@"
     local base_file_name=${input_file%%.yaml}
     local override_file=${base_file_name}-override.yaml
     local output_file=${base_file_name}-out.yaml
@@ -49,9 +51,9 @@ function f-test-convert() {
     local output_file2=${base_file_name}-out2.yaml
     local answer_file2=${base_file_name}-ans2.yaml
     if [ -f $override_file ]; then
-        f-test-success yamlsort -i $input_file -o $output_file --override-file $override_file
+        f-test-success yamlsort -i $input_file -o $output_file --override-file $override_file ${other_opt}
     else
-        f-test-success yamlsort -i $input_file -o $output_file
+        f-test-success yamlsort -i $input_file -o $output_file ${other_opt}
     fi
     if [ -f $answer_file ]; then
         if diff -u $answer_file $output_file ; then
@@ -66,9 +68,9 @@ function f-test-convert() {
     fi
     # pass 2
     if [ -f $override_file ]; then
-        f-test-success yamlsort -i $output_file -o $output_file2 --override-file $override_file
+        f-test-success yamlsort -i $output_file -o $output_file2 --override-file $override_file ${other_opt}
     else
-        f-test-success yamlsort -i $output_file -o $output_file2
+        f-test-success yamlsort -i $output_file -o $output_file2 ${other_opt}
     fi
     if [ -f $answer_file2 ]; then
         if diff -u $answer_file2 $output_file2 ; then
@@ -121,6 +123,9 @@ f-test-convert  sample9.yaml
 
 f-log "convert 10"
 f-test-convert  sample10.yaml
+
+f-log "convert 11"
+f-test-convert  sample11.yaml --skip-key  spec.template.spec.containers[name=kjwikigdocker-container].env[name=abc]
 
 f-log "TEST_SUCCESS_COUNT  $TEST_SUCCESS_COUNT  "
 f-log "TEST_FAILURE_COUNT  $TEST_FAILURE_COUNT  "
