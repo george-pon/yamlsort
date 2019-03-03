@@ -2,6 +2,7 @@
 
 ### version 0.1.15
 
+* fix : zero length array output.
 * add --select-key option, select output key from myMarshal outout.
     example : --select-key spec.template.spec.containers[name=kjwikigdocker-container].env[name=abc] \
               --select-key spec.template.spec.containers[name=kjwikigdocker-container].name
