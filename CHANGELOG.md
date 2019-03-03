@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+### version 0.1.15
+
+* add --select-key option, select output key from myMarshal outout.
+    example : --select-key spec.template.spec.containers[name=kjwikigdocker-container].env[name=abc] \
+              --select-key spec.template.spec.containers[name=kjwikigdocker-container].name
+    whense spec.template.spec.containers has array of map , which has key 'name' and value  'kjwikigdocker-container'.
+    because output - name: kjwikigdocker-container line , you have to set also --select-key containers[name=kjwikigdocker-container].name .
+
 ### version 0.1.14
 
 * add --skip-key option. skip output (remove) key from myMarshal output.

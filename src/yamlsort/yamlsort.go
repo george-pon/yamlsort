@@ -56,6 +56,7 @@ type yamlsortCmd struct {
 	inputoutputfilename string
 	overridefilename    string
 	skipkeys            []string
+	selectkeys          []string
 	blnInputJSON        bool
 	blnNormalMarshal    bool
 	blnJSONMarshal      bool
@@ -94,6 +95,7 @@ func newRootCmd(args []string) *cobra.Command {
 	f.BoolVar(&yamlsort.blnVersion, "version", false, "displays version")
 	f.StringArrayVar(&yamlsort.priorkeys, "key", []string{}, "set prior key name in sort. default prior key is name. (can specify multiple values with --key name --key title)")
 	f.StringArrayVar(&yamlsort.skipkeys, "skip-key", []string{}, "skip key name in marshal output. (can specify multiple values with --skip-key name --skip-key title)")
+	f.StringArrayVar(&yamlsort.selectkeys, "select-key", []string{}, "select key name in marshal output. (can specify multiple values with --select-key name --select-key title)")
 
 	yamlsort.stdin = os.Stdin
 	yamlsort.stdout = os.Stdout
@@ -509,6 +511,30 @@ func (c *yamlsortCmd) checkSkipKey(path string) bool {
 	return false
 }
 
+func (c *yamlsortCmd) checkSelectKey(path string) bool {
+
+	// 指定が一つもない場合は常に選択OK
+	if len(c.selectkeys) == 0 {
+		return true
+	}
+
+	// 指定がある場合は、指定されたパスの下だけOK
+	for _, s := range c.selectkeys {
+		if len(s) > 0 {
+			// 正解に続く道ならとりあえず許可する。ここで探索を打ち切ると正解にたどり着けないので。
+			if strings.HasPrefix(s, path) {
+				return true
+			}
+			// 正解の下は許可する
+			if strings.HasPrefix(path, s) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, path string, blnParentSlide bool, data interface{}) error {
 	if data == nil {
 		fmt.Fprintln(writer, "null")
@@ -548,6 +574,10 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, path strin
 			if c.checkSkipKey(childpath) == true {
 				continue
 			}
+			// heck select key
+			if c.checkSelectKey(childpath) != true {
+				continue
+			}
 			if v == nil {
 				// child is nil. print key only.
 				fmt.Fprintf(writer, "%s%s: ", indentstr, k)
@@ -569,6 +599,14 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, path strin
 		return nil
 	} else if a, ok := data.([]interface{}); ok {
 		// data is slice
+
+		// if array has no data, then output []
+		if len(a) == 0 {
+			indentstr := c.indentstr(level)
+			fmt.Fprintf(writer, "%s%s\n", indentstr, "[]")
+			return nil
+		}
+
 		for i, v := range a {
 			levelOffset := 0
 			if c.blnArrayIndentPlus2 {
@@ -585,6 +623,10 @@ func (c *yamlsortCmd) myMershalRecursive(writer io.Writer, level int, path strin
 			}
 			// check skip key
 			if c.checkSkipKey(childpath) == true {
+				continue
+			}
+			// heck select key
+			if c.checkSelectKey(childpath) != true {
 				continue
 			}
 			fmt.Fprintf(writer, "%s- ", c.indentstr(level-2+levelOffset))

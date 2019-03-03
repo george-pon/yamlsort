@@ -1,0 +1,11 @@
+---
+#  # powered by myMarshal output
+spec:
+  template:
+    spec:
+      containers:
+      - name: kjwikigdocker-container
+        env:
+        - name: abc
+          value: def
+

@@ -42,7 +42,6 @@ spec:
 ```
 $ yamlsort --help
 
-
 yaml sorter. read yaml text from stdin or file, output map key sorted text to stdout or file.
 
 Usage:
@@ -60,6 +59,7 @@ Flags:
   -o, --output-file string         path to output file name
       --override-file string       path to override input file name
       --quote-string               string value is always quoted in output
+      --select-key stringArray     select key name in marshal output. (can specify multiple values with --select-key name --select-key title)
       --skip-key stringArray       skip key name in marshal output. (can specify multiple values with --skip-key name --skip-key title)
       --version                    displays version
 ```

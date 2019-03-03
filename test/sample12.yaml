@@ -1,0 +1,5 @@
+#
+# test for zero length array
+#
+zeroarray: []
+zeromap: {}
