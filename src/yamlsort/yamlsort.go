@@ -410,7 +410,7 @@ func (c *yamlsortCmd) escapeString(value string) string {
 	// if string like boolean , then quote.
 	boolArray := [...]string{"true", "false", "yes", "no", "on", "off"}
 	for _, s := range boolArray {
-		if value == s {
+		if strings.EqualFold(value, s) {
 			blnDoQuote = true
 		}
 	}

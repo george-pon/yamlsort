@@ -103,10 +103,9 @@ f-log "convert "
 f-test-convert  sample.yaml
 
 # basic テスト。 map の key 項目ソートで、 name が a よりも前にくること。
-f-log "convert 1 : map key name sort. name as No. 1. "
+f-log "convert 1 : map key name sort. name as top key when sorted output."
 f-test-convert  sample1.yaml
 
-# 
 f-log "convert 2 : pvc, service, deployment multi file yaml test."
 f-test-convert  sample2.yaml
 

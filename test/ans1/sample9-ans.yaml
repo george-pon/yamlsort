@@ -7,4 +7,10 @@ env:
   value: 'yes'
 - name: APP_VALUE
   value: 'on'
+- name: REPLICA2
+  value: 'TRUE'
+- name: ALWAYS_RESTART2
+  value: 'YES'
+- name: APP_VALUE
+  value: 'ON'
 

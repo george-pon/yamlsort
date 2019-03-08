@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.16
+
+* fix: quote string value 'TRUE', 'YES', 'ON' always to avoid treated as boolean value.
+
 ### version 0.1.15
 
 * fix : zero length array output.
