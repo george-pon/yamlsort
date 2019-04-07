@@ -1,0 +1,6 @@
+---
+# sample14.yaml  # powered by myMarshal output
+env:
+- name: spacestring
+  value: ''
+

@@ -142,5 +142,8 @@ f-test-convert  sample12.yaml
 f-log "convert 13 : check --select-key option"
 f-test-convert  sample13.yaml --select-key spec.template.spec.containers[name=kjwikigdocker-container].env[name=abc]  --select-key spec.template.spec.containers[name=kjwikigdocker-container].name
 
+f-log "convert 14 : check zero-length string"
+f-test-convert  sample14.yaml
+
 f-log "TEST_SUCCESS_COUNT  $TEST_SUCCESS_COUNT  "
 f-log "TEST_FAILURE_COUNT  $TEST_FAILURE_COUNT  "
