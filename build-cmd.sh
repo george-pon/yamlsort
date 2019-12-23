@@ -55,10 +55,14 @@ if [ x"$mode"x = x"modbuild"x ]; then
             GOOS=linux GOARCH=arm64 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/linux_arm64_yamlsort
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
+            GOOS=linux GOARCH=arm GOGOARM=7 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/linux_armv7_yamlsort
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
             pushd ../../bin
             tar czf windows_amd64_yamlsort_${VERSION}.tar.gz windows_amd64_yamlsort.exe
             tar czf linux_amd64_yamlsort_${VERSION}.tar.gz linux_amd64_yamlsort
             tar czf linux_arm64_yamlsort_${VERSION}.tar.gz linux_arm64_yamlsort
+            tar czf linux_armv7_yamlsort_${VERSION}.tar.gz linux_armv7_yamlsort
             tar czf freebsd_amd64_yamlsort_${VERSION}.tar.gz freebsd_amd64_yamlsort
             popd
 
