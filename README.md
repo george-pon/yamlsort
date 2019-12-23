@@ -104,3 +104,18 @@ spec:
 # for go 1.11
 bash build-cmd.sh modbuild
 ```
+
+### how to build on docker image
+
+```
+# run docker image with my shell docker-run-v.sh
+docker-run-v.sh --image golang:1.13
+
+# set PATH go binary
+PATH=$PATH:/usr/local/go/bin
+export PATH
+
+# for go 1.13
+bash build-cmd.sh modbuild
+```
+
