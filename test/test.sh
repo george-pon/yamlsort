@@ -3,6 +3,10 @@
 #  test.sh
 #
 
+CURRENT=$(cd $(dirname $0);pwd)
+
+export PATH=$CURRENT/../bin:$PATH
+
 source ./test-common.sh
 
 function f-log() {
@@ -93,6 +97,60 @@ function f-test-convert() {
     fi
 }
 
+
+#
+#  テスト実施(json output)
+#
+function f-test-convert-json() {
+    local input_file=$1
+    shift
+    local other_opt="$@"
+    local base_file_name=${input_file%%.yaml}
+    local override_file=${base_file_name}-override.yaml
+    local output_file=out1/${base_file_name}-out.json
+    local answer_file=ans1/${base_file_name}-ans.json
+    local output_file2=out2/${base_file_name}-out2.yaml
+    local answer_file2=ans2/${base_file_name}-ans2.yaml
+
+    mkdir -p out1 ans1 out2 ans2
+
+    # pass 1
+    if [ -f $override_file ]; then
+        f-test-success yamlsort -i $input_file -o $output_file --override-file $override_file ${other_opt} --jsonoutput
+    else
+        f-test-success yamlsort -i $input_file -o $output_file ${other_opt} --jsonoutput
+    fi
+    if [ -f $answer_file ]; then
+        if diff -u $answer_file $output_file ; then
+            echo "diff SUCCESS"
+            TEST_SUCCESS_COUNT=$(( $TEST_SUCCESS_COUNT + 1 ))
+        else
+            echo "diff $answer_file $output_file FAILURE"
+            TEST_FAILURE_COUNT=$(( $TEST_FAILURE_COUNT + 1 ))
+        fi
+    else
+        cp $output_file $answer_file
+    fi
+
+    # pass 2
+    if [ -f $override_file ]; then
+        f-test-success yamlsort -i $output_file --jsoninput -o $output_file2 --override-file $override_file ${other_opt}
+    else
+        f-test-success yamlsort -i $output_file --jsoninput -o $output_file2 ${other_opt}
+    fi
+    if [ -f $answer_file2 ]; then
+        if diff -u $answer_file2 $output_file2 ; then
+            echo "diff SUCCESS"
+            TEST_SUCCESS_COUNT=$(( $TEST_SUCCESS_COUNT + 1 ))
+        else
+            echo "diff $answer_file2 $output_file2 FAILURE"
+            TEST_FAILURE_COUNT=$(( $TEST_FAILURE_COUNT + 1 ))
+        fi
+    else
+        cp $output_file2 $answer_file2
+    fi
+}
+
 TEST_SUCCESS_COUNT=0
 TEST_FAILURE_COUNT=0
 
@@ -144,6 +202,9 @@ f-test-convert  sample13.yaml --select-key spec.template.spec.containers[name=kj
 
 f-log "convert 14 : check zero-length string"
 f-test-convert  sample14.yaml
+
+f-log "convert 15 : check yaml here document and jsonoutput"
+f-test-convert-json  sample15.yaml
 
 f-log "TEST_SUCCESS_COUNT  $TEST_SUCCESS_COUNT  "
 f-log "TEST_FAILURE_COUNT  $TEST_FAILURE_COUNT  "

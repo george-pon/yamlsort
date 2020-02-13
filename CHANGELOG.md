@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+### version 0.1.19
+
+* fix: when --jsonoutout mode, ommit comment output.
+
+### version 0.1.18
+
+* add arm v7 (32bit) binary
+* compile with go 1.13
+
+### version 0.1.17
+
+* add arm64 binary
+
 ### version 0.1.16
 
 * fix: quote string value 'TRUE', 'YES', 'ON' always to avoid treated as boolean value.

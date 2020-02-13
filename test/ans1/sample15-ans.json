@@ -1,0 +1,8 @@
+{
+  "env": [
+    {
+      "name": "spacestring",
+      "value": "echo \"hello, world\"\nyum install -y less\n"
+    }
+  ]
+}

@@ -301,8 +301,8 @@ func (c *yamlsortCmd) procOneFile(outputWriter io.Writer, firstlinestr string, i
 			fmt.Fprintln(c.stderr, "Marshal error:", err)
 			return err
 		}
-		fmt.Fprintln(outputWriter, "---")
-		fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# powered by json.MarshalIndent output")
+		// fmt.Fprintln(outputWriter, "---")
+		// fmt.Fprintf(outputWriter, "%s%s\n", firstlinestr, "# powered by json.MarshalIndent output")
 		fmt.Fprintln(outputWriter, string(outputBytes))
 
 	} else {
@@ -468,36 +468,32 @@ func (c *yamlsortCmd) escapeString(value string) string {
 		result = strings.Replace(result, "\r", "\\r", -1)
 		result = "\"" + result + "\""
 		return result
-	} else {
-		// quote '
-		// quote ' .  in quote ' ,  ' is ''
-		result := "'" + strings.Replace(value, "'", "''", -1) + "'"
-		return result
 	}
+	// quote '
+	// quote ' .  in quote ' ,  ' is ''
+	result := "'" + strings.Replace(value, "'", "''", -1) + "'"
+	return result
 }
 
 func (c *yamlsortCmd) calcPathMap(path string, key string) string {
 	if len(path) == 0 {
 		return key
-	} else {
-		return path + "." + key
 	}
+	return path + "." + key
 }
 
 func (c *yamlsortCmd) calcPathSlice(path string, index int) string {
 	if len(path) == 0 {
 		return "[" + strconv.Itoa(index) + "]"
-	} else {
-		return path + "[" + strconv.Itoa(index) + "]"
 	}
+	return path + "[" + strconv.Itoa(index) + "]"
 }
 
 func (c *yamlsortCmd) calcPathSliceMap(path string, key string, value string) string {
 	if len(path) == 0 {
 		return "[" + key + "=" + value + "]"
-	} else {
-		return path + "[" + key + "=" + value + "]"
 	}
+	return path + "[" + key + "=" + value + "]"
 }
 
 func (c *yamlsortCmd) checkSkipKey(path string) bool {
