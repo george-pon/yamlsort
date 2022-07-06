@@ -1,5 +1,9 @@
 # CHANGELOG.md
 
+### version 0.1.20
+
+* add: windows 386 binary.
+
 ### version 0.1.19
 
 * fix: when --jsonoutout mode, ommit comment output.

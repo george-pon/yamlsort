@@ -46,6 +46,9 @@ if [ x"$mode"x = x"modbuild"x ]; then
             GOOS=windows GOARCH=amd64 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/windows_amd64_yamlsort.exe
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
+            GOOS=windows GOARCH=386 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/windows_386_yamlsort.exe
+            RC=$? ; if [ $RC -ne 0 ]; then break ; fi
+
             GOOS=linux GOARCH=amd64 go build   -ldflags "-X main.version=$(git describe)"    -o ../../bin/linux_amd64_yamlsort
             RC=$? ; if [ $RC -ne 0 ]; then break ; fi
 
@@ -60,6 +63,7 @@ if [ x"$mode"x = x"modbuild"x ]; then
 
             pushd ../../bin
             tar czf windows_amd64_yamlsort_${VERSION}.tar.gz windows_amd64_yamlsort.exe
+            tar czf windows_386_yamlsort_${VERSION}.tar.gz windows_386_yamlsort.exe
             tar czf linux_amd64_yamlsort_${VERSION}.tar.gz linux_amd64_yamlsort
             tar czf linux_arm64_yamlsort_${VERSION}.tar.gz linux_arm64_yamlsort
             tar czf linux_armv7_yamlsort_${VERSION}.tar.gz linux_armv7_yamlsort
